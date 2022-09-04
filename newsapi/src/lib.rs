@@ -10,14 +10,19 @@ const BASE_URL: &str = "https://newsapi.org/v2";
 pub enum NewsAPIError {
     #[error("Failed fetching articles")]
     RequestFailed(#[from] ureq::Error),
+    
     #[error("Failed converting response to string")]
     FailedResponseToString(#[from] std::io::Error),
+    
     #[error("Failed parsing articles data")]
     ArticleParseFailed(serde_json::Error),
+    
     #[error("Failed parsing url")]
     UrlParsing(#[from] url::ParseError),
+
     #[error("Request failed: {0}")]
     BadRequest(&'static str),
+
     #[error("Async request failed: {0}")]
     #[cfg(feature = "async")]
     AsyncRequestFailed(#[from] reqwest::Error),
