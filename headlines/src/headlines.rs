@@ -51,7 +51,16 @@ impl Headlines {
         ctx.set_style(style);
     }
 
-    pub fn render_news_card(&self, ui: &mut Ui) {
+    fn render_header(&self, ui: &mut Ui) {
+        ui.vertical_centered(|ui| {
+            ui.heading("Headlines");
+        });
+
+        ui.add_space(PADDING);
+        ui.add(Separator::default().spacing(20.));
+    }
+
+    fn render_news_card(&self, ui: &mut Ui) {
         for article in &self.articles {
             // Add title
             ui.add_space(PADDING);
@@ -78,7 +87,7 @@ impl Headlines {
 impl eframe::App for Headlines {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Headings");
+            self.render_header(ui);
             ScrollArea::vertical()
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
