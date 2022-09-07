@@ -1,3 +1,6 @@
+pub mod news_card_data;
+use self::news_card_data::NewsCardData;
+
 use eframe::{
     egui::{
         menu, CentralPanel, Context, FontData, FontDefinitions, Layout, RichText, ScrollArea,
@@ -11,22 +14,18 @@ const PADDING: f32 = 5.0;
 const WHITE: Color32 = Color32::from_rgb(255, 255, 255);
 const CYAN: Color32 = Color32::from_rgb(0, 255, 255);
 
-pub struct NewsCardData {
-    title: String,
-    desc: String,
-    url: String,
-}
-
 pub struct Headlines {
     articles: Vec<NewsCardData>,
 }
 
 impl Headlines {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        let iter = (0..20).map(|a| NewsCardData {
-            title: format!("title{}", a),
-            desc: format!("desc{}", a),
-            url: format!("url{}", a),
+        let iter = (0..20).map(|a| {
+            NewsCardData::new(
+                format!("title{}", a),
+                format!("description{}", a),
+                format!("http://url/{}", a),
+            )
         });
 
         Headlines {
@@ -39,7 +38,7 @@ impl Headlines {
 
         font_def.font_data.insert(
             "MesloLGS".to_string(),
-            FontData::from_static(include_bytes!("../../MesloLGS_NF_Regular.ttf")),
+            FontData::from_static(include_bytes!("../../../MesloLGS_NF_Regular.ttf")),
         );
 
         font_def
@@ -88,18 +87,18 @@ impl Headlines {
         for article in &self.articles {
             // Add title
             ui.add_space(PADDING);
-            let title = format!("▶ {}", article.title);
+            let title = format!("▶ {}", article.title());
             ui.colored_label(WHITE, title);
 
             // Add description
             ui.add_space(PADDING);
-            ui.label(RichText::new(&article.desc).small());
+            ui.label(RichText::new(article.desc()).small());
 
             // Add URL
             ui.add_space(PADDING);
             ui.style_mut().visuals.hyperlink_color = CYAN;
             ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
-                ui.hyperlink_to("read more ⤴", &article.url);
+                ui.hyperlink_to("read more ⤴", &article.url());
             });
 
             ui.add_space(PADDING);
