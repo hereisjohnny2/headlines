@@ -11,6 +11,12 @@ const PADDING: f32 = 5.0;
 const WHITE: Color32 = Color32::from_rgb(255, 255, 255);
 const CYAN: Color32 = Color32::from_rgb(0, 255, 255);
 
+pub struct NewsCardData {
+    title: String,
+    desc: String,
+    url: String,
+}
+
 pub struct Headlines {
     articles: Vec<NewsCardData>,
 }
@@ -78,15 +84,6 @@ impl Headlines {
         });
     }
 
-    fn render_header(&self, ui: &mut Ui) {
-        ui.vertical_centered(|ui| {
-            ui.heading("Headlines");
-        });
-
-        ui.add_space(PADDING);
-        ui.add(Separator::default().spacing(20.));
-    }
-
     fn render_news_card(&self, ui: &mut Ui) {
         for article in &self.articles {
             // Add title
@@ -109,32 +106,14 @@ impl Headlines {
             ui.add(Separator::default());
         }
     }
-
-    fn render_footer(&self, ctx: &Context) {
-        TopBottomPanel::bottom("footer").show(ctx, |ui| {
-            ui.vertical_centered(|ui| {
-                ui.add_space(10.);
-                ui.label(RichText::new("API source: newsapi.org").small());
-                ui.hyperlink_to(
-                    RichText::new("Made with egui").small(),
-                    "https://github.com/emilk/egui",
-                );
-                ui.hyperlink_to(
-                    RichText::new("hereisjohnny2/headlines").small(),
-                    "https://github.com/hereisjohnny2/headlines",
-                );
-                ui.add_space(10.);
-            });
-        });
-    }
 }
 
 impl eframe::App for Headlines {
     fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         self.render_top_panel(ctx);
-        self.render_footer(ctx);
+        render_footer(ctx);
         CentralPanel::default().show(ctx, |ui| {
-            self.render_header(ui);
+            render_header(ui);
             ScrollArea::vertical()
                 .auto_shrink([false, true])
                 .show(ui, |ui| {
@@ -144,8 +123,29 @@ impl eframe::App for Headlines {
     }
 }
 
-pub struct NewsCardData {
-    title: String,
-    desc: String,
-    url: String,
+fn render_header(ui: &mut Ui) {
+    ui.vertical_centered(|ui| {
+        ui.heading("Headlines");
+    });
+
+    ui.add_space(PADDING);
+    ui.add(Separator::default().spacing(20.));
+}
+
+fn render_footer(ctx: &Context) {
+    TopBottomPanel::bottom("footer").show(ctx, |ui| {
+        ui.vertical_centered(|ui| {
+            ui.add_space(10.);
+            ui.label(RichText::new("API source: newsapi.org").small());
+            ui.hyperlink_to(
+                RichText::new("Made with egui").small(),
+                "https://github.com/emilk/egui",
+            );
+            ui.hyperlink_to(
+                RichText::new("hereisjohnny2/headlines").small(),
+                "https://github.com/hereisjohnny2/headlines",
+            );
+            ui.add_space(10.);
+        });
+    });
 }

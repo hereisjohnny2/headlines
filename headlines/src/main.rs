@@ -1,7 +1,7 @@
+mod headlines;
+
 use eframe::epaint::Vec2;
 use headlines::Headlines;
-
-mod headlines;
 
 fn main() {
     let mut native_options = eframe::NativeOptions::default();
