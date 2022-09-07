@@ -19,3 +19,5 @@ $ cargo run
 ```
 
 > It is necessary to have a **NewsAPI key**, which can be provided [here](https://newsapi.org/register).
+
+The persisted config data will be available at `~/.config/headlines_config`.

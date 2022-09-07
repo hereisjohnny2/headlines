@@ -13,6 +13,8 @@ use eframe::{
     epaint::{Color32, FontFamily, FontId},
 };
 
+use confy;
+
 const PADDING: f32 = 5.0;
 
 const WHITE: Color32 = Color32::from_rgb(255, 255, 255);
@@ -35,9 +37,11 @@ impl Headlines {
             )
         });
 
+        let config: HeadlinesConfig = confy::load("headlines_config").unwrap_or_default();
+
         Headlines {
             articles: Vec::from_iter(iter),
-            config: HeadlinesConfig::new(),
+            config,
         }
     }
 
@@ -95,14 +99,14 @@ impl Headlines {
                     }
 
                     if ui
-                        .button(if self.config.dark_mode {
+                        .button(if self.config.dark_mode() {
                             "🌙"
                         } else {
                             "🌞"
                         })
                         .clicked()
                     {
-                        self.config.dark_mode = !self.config.dark_mode;
+                        self.config.toggle_dark_mode();
                     }
                 });
             });
@@ -115,7 +119,7 @@ impl Headlines {
             // Add title
             ui.add_space(PADDING);
             let title = format!("▶ {}", article.title());
-            ui.colored_label(if self.config.dark_mode { WHITE } else { BLACK }, title);
+            ui.colored_label(if self.config.dark_mode() { WHITE } else { BLACK }, title);
 
             // Add description
             ui.add_space(PADDING);
@@ -123,7 +127,11 @@ impl Headlines {
 
             // Add URL
             ui.add_space(PADDING);
-            ui.style_mut().visuals.hyperlink_color = if self.config.dark_mode { LIGHT_BLUE } else { BLUE };
+            ui.style_mut().visuals.hyperlink_color = if self.config.dark_mode() {
+                LIGHT_BLUE
+            } else {
+                BLUE
+            };
             ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                 ui.hyperlink_to("read more ⤴", &article.url());
             });
@@ -136,7 +144,7 @@ impl Headlines {
 
 impl eframe::App for Headlines {
     fn update(&mut self, ctx: &Context, frame: &mut eframe::Frame) {
-        if self.config.dark_mode {
+        if self.config.dark_mode() {
             ctx.set_visuals(Visuals::dark())
         } else {
             ctx.set_visuals(Visuals::light())
