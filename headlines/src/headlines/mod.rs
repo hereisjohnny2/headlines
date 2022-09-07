@@ -1,21 +1,28 @@
-pub mod news_card_data;
-use self::news_card_data::NewsCardData;
+mod headlines_config;
+mod news_card_data;
+
+use headlines_config::HeadlinesConfig;
+use news_card_data::NewsCardData;
 
 use eframe::{
     egui::{
         menu, CentralPanel, Context, FontData, FontDefinitions, Layout, RichText, ScrollArea,
-        Separator, Style, TextStyle, TopBottomPanel, Ui,
+        Separator, Style, TextStyle, TopBottomPanel, Ui, Visuals,
     },
     emath::Align,
     epaint::{Color32, FontFamily, FontId},
 };
 
 const PADDING: f32 = 5.0;
+
 const WHITE: Color32 = Color32::from_rgb(255, 255, 255);
-const CYAN: Color32 = Color32::from_rgb(0, 255, 255);
+const BLACK: Color32 = Color32::from_rgb(0, 0, 0);
+const LIGHT_BLUE: Color32 = Color32::from_rgb(0, 255, 255);
+const BLUE: Color32 = Color32::from_rgb(0, 102, 255);
 
 pub struct Headlines {
     articles: Vec<NewsCardData>,
+    config: HeadlinesConfig,
 }
 
 impl Headlines {
@@ -30,6 +37,7 @@ impl Headlines {
 
         Headlines {
             articles: Vec::from_iter(iter),
+            config: HeadlinesConfig::new(),
         }
     }
 
@@ -59,6 +67,10 @@ impl Headlines {
                 TextStyle::Small,
                 FontId::new(16.0, FontFamily::Proportional),
             ),
+            (
+                TextStyle::Button,
+                FontId::new(20.0, FontFamily::Proportional),
+            ),
         ]
         .into();
 
@@ -66,7 +78,7 @@ impl Headlines {
         ctx.set_fonts(font_def);
     }
 
-    fn render_top_panel(&self, ctx: &Context) {
+    fn render_top_panel(&mut self, ctx: &Context, frame: &mut eframe::Frame) {
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.add_space(10.);
             menu::bar(ui, |ui| {
@@ -74,9 +86,24 @@ impl Headlines {
                     ui.label(RichText::new("📓").heading());
                 });
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    ui.label("❌");
-                    ui.label("🔄");
-                    ui.label("🌙");
+                    if ui.button("❌").clicked() {
+                        frame.close();
+                    }
+
+                    if ui.button("🔄").clicked() {
+                        todo!();
+                    }
+
+                    if ui
+                        .button(if self.config.dark_mode {
+                            "🌙"
+                        } else {
+                            "🌞"
+                        })
+                        .clicked()
+                    {
+                        self.config.dark_mode = !self.config.dark_mode;
+                    }
                 });
             });
             ui.add_space(10.);
@@ -88,7 +115,7 @@ impl Headlines {
             // Add title
             ui.add_space(PADDING);
             let title = format!("▶ {}", article.title());
-            ui.colored_label(WHITE, title);
+            ui.colored_label(if self.config.dark_mode { WHITE } else { BLACK }, title);
 
             // Add description
             ui.add_space(PADDING);
@@ -96,7 +123,7 @@ impl Headlines {
 
             // Add URL
             ui.add_space(PADDING);
-            ui.style_mut().visuals.hyperlink_color = CYAN;
+            ui.style_mut().visuals.hyperlink_color = if self.config.dark_mode { LIGHT_BLUE } else { BLUE };
             ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
                 ui.hyperlink_to("read more ⤴", &article.url());
             });
@@ -108,8 +135,14 @@ impl Headlines {
 }
 
 impl eframe::App for Headlines {
-    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
-        self.render_top_panel(ctx);
+    fn update(&mut self, ctx: &Context, frame: &mut eframe::Frame) {
+        if self.config.dark_mode {
+            ctx.set_visuals(Visuals::dark())
+        } else {
+            ctx.set_visuals(Visuals::light())
+        }
+
+        self.render_top_panel(ctx, frame);
         render_footer(ctx);
         CentralPanel::default().show(ctx, |ui| {
             render_header(ui);
