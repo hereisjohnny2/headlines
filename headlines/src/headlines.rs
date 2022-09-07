@@ -71,10 +71,10 @@ impl Headlines {
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.add_space(10.);
             menu::bar(ui, |ui| {
-                ui.with_layout(Layout::left_to_right(Align::Min), |ui| {
+                ui.with_layout(Layout::left_to_right(Align::Center), |ui| {
                     ui.label(RichText::new("📓").heading());
                 });
-                ui.with_layout(Layout::right_to_left(Align::Min), |ui| {
+                ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
                     ui.label("❌");
                     ui.label("🔄");
                     ui.label("🌙");
