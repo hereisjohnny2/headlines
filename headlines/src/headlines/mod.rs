@@ -37,7 +37,7 @@ impl Headlines {
             )
         });
 
-        let config: HeadlinesConfig = confy::load("headlines_config").unwrap_or_default();
+        let config: HeadlinesConfig = confy::load("headlines").unwrap_or_default();
 
         Headlines {
             articles: Vec::from_iter(iter),
