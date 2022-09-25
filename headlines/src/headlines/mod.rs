@@ -6,8 +6,8 @@ use news_card_data::NewsCardData;
 
 use eframe::{
     egui::{
-        menu, CentralPanel, Context, FontData, FontDefinitions, Layout, RichText, ScrollArea,
-        Separator, Style, TextStyle, TopBottomPanel, Ui, Visuals,
+        menu, CentralPanel, Context, FontData, FontDefinitions, Key, Layout, RichText, ScrollArea,
+        Separator, Style, TextStyle, TopBottomPanel, Ui, Visuals, Window,
     },
     emath::Align,
     epaint::{Color32, FontFamily, FontId},
@@ -24,7 +24,8 @@ const BLUE: Color32 = Color32::from_rgb(0, 102, 255);
 
 pub struct Headlines {
     articles: Vec<NewsCardData>,
-    config: HeadlinesConfig,
+    pub config: HeadlinesConfig,
+    api_key_initialized: bool,
 }
 
 impl Headlines {
@@ -42,6 +43,7 @@ impl Headlines {
         Headlines {
             articles: Vec::from_iter(iter),
             config,
+            api_key_initialized: false,
         }
     }
 
@@ -119,7 +121,14 @@ impl Headlines {
             // Add title
             ui.add_space(PADDING);
             let title = format!("▶ {}", article.title());
-            ui.colored_label(if self.config.dark_mode() { WHITE } else { BLACK }, title);
+            ui.colored_label(
+                if self.config.dark_mode() {
+                    WHITE
+                } else {
+                    BLACK
+                },
+                title,
+            );
 
             // Add description
             ui.add_space(PADDING);
@@ -140,6 +149,31 @@ impl Headlines {
             ui.add(Separator::default());
         }
     }
+
+    pub fn render_config(&mut self, ctx: &Context) {
+        Window::new("Configuration").show(ctx, |ui| {
+            ui.label("Enter your API_KEY for newapi.org");
+            let text_input = ui.text_edit_singleline(&mut self.config.api_key);
+
+            if text_input.lost_focus() && ui.input().key_pressed(Key::Enter) {
+                if let Err(e) = confy::store(
+                    "headlines",
+                    HeadlinesConfig {
+                        dark_mode: self.config.dark_mode(),
+                        api_key: self.config.api_key.to_string(),
+                    },
+                ) {
+                    tracing::error!("error saving app state: {}", e);
+                }
+
+                self.api_key_initialized = true;
+                self.fetch_news();
+            }
+
+            ui.label("If you haven't registered for the API_KEY, head over to");
+            ui.hyperlink("https://newsapi.org")
+        });
+    }
 }
 
 impl eframe::App for Headlines {
@@ -150,16 +184,20 @@ impl eframe::App for Headlines {
             ctx.set_visuals(Visuals::light())
         }
 
-        self.render_top_panel(ctx, frame);
-        render_footer(ctx);
-        CentralPanel::default().show(ctx, |ui| {
-            render_header(ui);
-            ScrollArea::vertical()
-                .auto_shrink([false, true])
-                .show(ui, |ui| {
-                    self.render_news_card(ui);
-                });
-        });
+        if !self.api_key_initialized {
+            self.render_config(ctx);
+        } else {
+            self.render_top_panel(ctx, frame);
+            render_footer(ctx);
+            CentralPanel::default().show(ctx, |ui| {
+                render_header(ui);
+                ScrollArea::vertical()
+                    .auto_shrink([false, true])
+                    .show(ui, |ui| {
+                        self.render_news_card(ui);
+                    });
+            });
+        }
     }
 }
 

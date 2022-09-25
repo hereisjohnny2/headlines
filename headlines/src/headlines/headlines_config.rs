@@ -2,7 +2,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct HeadlinesConfig {
-    dark_mode: bool,
+    pub dark_mode: bool,
+    pub api_key: String
 }
 
 impl HeadlinesConfig {
@@ -17,6 +18,6 @@ impl HeadlinesConfig {
 
 impl Default for HeadlinesConfig {
     fn default() -> Self {
-        Self { dark_mode: true }
+        Self { dark_mode: true, api_key: String::new() }
     }
 }
