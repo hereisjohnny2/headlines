@@ -14,6 +14,7 @@ use eframe::{
 };
 
 use confy;
+use newsapi::NewsAPI;
 
 const PADDING: f32 = 5.0;
 
@@ -30,20 +31,12 @@ pub struct Headlines {
 
 impl Headlines {
     pub fn new(_cc: &eframe::CreationContext<'_>) -> Self {
-        let iter = (0..20).map(|a| {
-            NewsCardData::new(
-                format!("title{}", a),
-                format!("description{}", a),
-                format!("http://url/{}", a),
-            )
-        });
-
         let config: HeadlinesConfig = confy::load("headlines").unwrap_or_default();
 
         Headlines {
-            articles: Vec::from_iter(iter),
+            api_key_initialized: !config.api_key.is_empty(),
+            articles: Vec::new(),
             config,
-            api_key_initialized: false,
         }
     }
 
@@ -84,6 +77,20 @@ impl Headlines {
         ctx.set_fonts(font_def);
     }
 
+    pub fn fetch_news(&mut self) {
+        if let Ok(response) = NewsAPI::new(&self.config.api_key).fetch() {
+            let articles = response.articles();
+            for a in articles.iter() {
+                let news = NewsCardData::new(
+                    a.title().to_string(),
+                    a.desc().map(|s| s.to_string()).unwrap_or("...".to_string()),
+                    a.url().to_string(),
+                );
+                self.articles.push(news);
+            }
+        }
+    }
+
     fn render_top_panel(&mut self, ctx: &Context, frame: &mut eframe::Frame) {
         TopBottomPanel::top("top_panel").show(ctx, |ui| {
             ui.add_space(10.);
@@ -97,7 +104,7 @@ impl Headlines {
                     }
 
                     if ui.button("🔄").clicked() {
-                        todo!();
+                        self.fetch_news();
                     }
 
                     if ui
@@ -167,7 +174,6 @@ impl Headlines {
                 }
 
                 self.api_key_initialized = true;
-                self.fetch_news();
             }
 
             ui.label("If you haven't registered for the API_KEY, head over to");
